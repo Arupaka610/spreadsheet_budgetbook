@@ -78,6 +78,12 @@
     .btn-danger:hover { background: #fecaca; }
     .btn-sm { padding: 5px 12px; font-size: 12px; }
 
+    /* グラフ期間フィルター */
+    .period-bar { display: flex; gap: 6px; margin-bottom: 20px; }
+    .period-btn { padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #4a5568; transition: all 0.15s; }
+    .period-btn:hover { border-color: #2563eb; color: #2563eb; }
+    .period-btn.active { background: #2563eb; border-color: #2563eb; color: white; }
+
     /* テーブル */
     .table-card { background: white; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); overflow: hidden; }
     .filter-bar { display: flex; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #f0f4f8; flex-wrap: wrap; }
@@ -177,6 +183,12 @@
   <div id="charts" class="section">
     <div class="section-title">グラフ</div>
     <div class="section-sub">資産の推移と内訳を可視化します</div>
+    <div class="period-bar">
+      <button class="period-btn" onclick="setChartPeriod(3, this)">3ヶ月</button>
+      <button class="period-btn" onclick="setChartPeriod(6, this)">6ヶ月</button>
+      <button class="period-btn active" onclick="setChartPeriod(12, this)">1年</button>
+      <button class="period-btn" onclick="setChartPeriod(null, this)">全期間</button>
+    </div>
     <div class="chart-grid">
       <div class="chart-card wide">
         <div class="chart-title">📈 総資産推移（全期間）</div>
@@ -246,6 +258,7 @@ let structure = [];     // 行構造 [{row, category, label, isInput, isTotal}]
 let months    = [];     // [{idx, label}]
 const charts  = {};
 let currentFilter = 'all';
+let chartPeriod = 12; // null = 全期間
 
 // ============================================================
 // 初期化
@@ -470,23 +483,31 @@ function saveData() {
 // ============================================================
 // グラフ
 // ============================================================
+function setChartPeriod(n, btn) {
+  chartPeriod = n;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildCharts();
+}
+
 function buildCharts() {
-  const labels = months.map(m => m.label);
+  const m = chartPeriod ? months.slice(-chartPeriod) : months;
+  const labels = m.map(x => x.label);
   const bank = structure.filter(r => r.category === '銀行' && r.isInput);
   const inv  = structure.filter(r => r.category === '投資'  && r.isInput);
   const colors = ['#dc2626','#d97706','#16a34a','#2563eb','#7c3aed','#0891b2'];
 
   mkChart('totalChart', 'line', labels, [
-    { label:'総資産', data: months.map(m=>val(findRow('全合計'),m.idx)),   borderColor:'#1e40af', backgroundColor:'rgba(30,64,175,0.08)', fill:true, tension:0.4, pointRadius:2 },
-    { label:'現金',   data: months.map(m=>val(findRow('現金総額'),m.idx)), borderColor:'#16a34a', fill:false, tension:0.4, pointRadius:1 },
-    { label:'投資',   data: months.map(m=>val(findRow('投資総額'),m.idx)), borderColor:'#d97706', fill:false, tension:0.4, pointRadius:1 },
+    { label:'総資産', data: m.map(x=>val(findRow('全合計'),x.idx)),   borderColor:'#1e40af', backgroundColor:'rgba(30,64,175,0.08)', fill:true, tension:0.4, pointRadius:2 },
+    { label:'現金',   data: m.map(x=>val(findRow('現金総額'),x.idx)), borderColor:'#16a34a', fill:false, tension:0.4, pointRadius:1 },
+    { label:'投資',   data: m.map(x=>val(findRow('投資総額'),x.idx)), borderColor:'#d97706', fill:false, tension:0.4, pointRadius:1 },
   ]);
   mkChart('stackChart', 'bar', labels, [
-    { label:'現金', data: months.map(m=>val(findRow('現金総額'),m.idx)), backgroundColor:'rgba(22,163,74,0.7)' },
-    { label:'投資', data: months.map(m=>val(findRow('投資総額'),m.idx)), backgroundColor:'rgba(30,64,175,0.7)' },
+    { label:'現金', data: m.map(x=>val(findRow('現金総額'),x.idx)), backgroundColor:'rgba(22,163,74,0.7)' },
+    { label:'投資', data: m.map(x=>val(findRow('投資総額'),x.idx)), backgroundColor:'rgba(30,64,175,0.7)' },
   ], { stacked: true });
 
-  const diffData = months.map(m => val(findRow('前月との比較'), m.idx));
+  const diffData = m.map(x => val(findRow('前月との比較'), x.idx));
   mkChart('changeChart', 'bar', labels, [{
     label:'月間増減', data: diffData,
     backgroundColor: diffData.map(v => v>=0 ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.7)'),
@@ -495,10 +516,10 @@ function buildCharts() {
   }], {}, true);
 
   mkChart('bankChart', 'line', labels,
-    bank.map((r, i) => ({ label: r.label, data: months.map(m=>val(r,m.idx)), borderColor: colors[i % colors.length], tension:0.4, pointRadius:1 }))
+    bank.map((r, i) => ({ label: r.label, data: m.map(x=>val(r,x.idx)), borderColor: colors[i % colors.length], tension:0.4, pointRadius:1 }))
   );
   mkChart('investChart', 'line', labels,
-    inv.map((r, i) => ({ label: r.label, data: months.map(m=>val(r,m.idx)), borderColor: colors[i % colors.length], tension:0.4, pointRadius:1 }))
+    inv.map((r, i) => ({ label: r.label, data: m.map(x=>val(r,x.idx)), borderColor: colors[i % colors.length], tension:0.4, pointRadius:1 }))
   );
 }
 
