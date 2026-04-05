@@ -121,10 +121,91 @@
     .settings-msg { font-size: 13px; margin-top: 8px; min-height: 20px; }
     .settings-msg.ok { color: #16a34a; } .settings-msg.err { color: #dc2626; }
 
+    /* ===== ボトムナビ（モバイル用） ===== */
+    .bottom-nav { display: none; }
+
+    /* ===== モバイル対応 ===== */
     @media (max-width: 768px) {
-      .chart-grid { grid-template-columns: 1fr; }
-      .nav-title { font-size: 15px; margin-right: 12px; }
-      .nav-tab { padding: 6px 10px; font-size: 12px; }
+      /* トップナビのタブを非表示にしてボトムナビへ切り替え */
+      .nav { height: 50px; padding: 0 16px; }
+      .nav-title { font-size: 15px; margin-right: 0; }
+      .nav-tabs { display: none; }
+
+      /* ボトムナビを表示 */
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .bottom-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 4px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: #94a3b8;
+        transition: color 0.15s;
+        gap: 3px;
+        min-height: 56px;
+      }
+      .bottom-tab.active { color: #2563eb; }
+      .bottom-icon { font-size: 20px; line-height: 1; }
+      .bottom-label { font-size: 10px; font-weight: 600; }
+
+      /* メインコンテンツをボトムナビ分下にずらす */
+      .main { padding: 16px 12px 80px; }
+
+      /* セクションタイトル */
+      .section-title { font-size: 18px; }
+      .section-sub { font-size: 13px; margin-bottom: 16px; }
+
+      /* カードグリッド */
+      .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+      .card { padding: 14px 16px; border-radius: 12px; }
+      .card-value { font-size: 18px; }
+      .card.accent .card-value { font-size: 22px; }
+
+      /* グラフグリッド */
+      .chart-grid { grid-template-columns: 1fr; gap: 14px; }
+      .chart-card { padding: 16px; border-radius: 12px; }
+      .chart-wrap { height: 220px; }
+      .chart-wrap.tall { height: 250px; }
+      .period-bar { gap: 6px; flex-wrap: wrap; }
+      .period-btn { padding: 5px 14px; font-size: 12px; }
+
+      /* フォーム */
+      .form-card { padding: 16px; border-radius: 12px; }
+      .form-top { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+      .form-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .field input { padding: 10px 12px; font-size: 16px; } /* 16px以上でiOSのズームを防ぐ */
+      .save-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .save-bar .btn { width: 100%; text-align: center; padding: 13px; }
+      .save-msg { text-align: center; }
+
+      /* テーブル */
+      .table-scroll { max-height: 55vh; }
+      .filter-bar { padding: 10px 12px; gap: 6px; }
+
+      /* 設定タブ */
+      .settings-grid { grid-template-columns: 1fr; gap: 14px; }
+      .settings-cat { padding: 16px; border-radius: 12px; }
+      .new-cat-card { max-width: 100% !important; }
+      .add-item-form { flex-direction: column; }
+      .add-item-form .btn { width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 400px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -133,12 +214,36 @@
 <nav class="nav">
   <div class="nav-title">💰 貯金管理</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('dashboard',this)">ダッシュボード</button>
-    <button class="nav-tab" onclick="showTab('input',this)">データ入力</button>
-    <button class="nav-tab" onclick="showTab('charts',this)">グラフ</button>
-    <button class="nav-tab" onclick="showTab('tableview',this)">データ一覧</button>
-    <button class="nav-tab" onclick="showTab('settings',this)">⚙ 設定</button>
+    <button class="nav-tab active" data-tab="dashboard" onclick="showTab('dashboard',this)">ダッシュボード</button>
+    <button class="nav-tab" data-tab="input" onclick="showTab('input',this)">データ入力</button>
+    <button class="nav-tab" data-tab="charts" onclick="showTab('charts',this)">グラフ</button>
+    <button class="nav-tab" data-tab="tableview" onclick="showTab('tableview',this)">データ一覧</button>
+    <button class="nav-tab" data-tab="settings" onclick="showTab('settings',this)">⚙ 設定</button>
   </div>
+</nav>
+
+<!-- モバイル用ボトムナビ -->
+<nav class="bottom-nav">
+  <button class="bottom-tab active" data-tab="dashboard" onclick="showTab('dashboard',this)">
+    <span class="bottom-icon">🏠</span>
+    <span class="bottom-label">ホーム</span>
+  </button>
+  <button class="bottom-tab" data-tab="input" onclick="showTab('input',this)">
+    <span class="bottom-icon">✏️</span>
+    <span class="bottom-label">入力</span>
+  </button>
+  <button class="bottom-tab" data-tab="charts" onclick="showTab('charts',this)">
+    <span class="bottom-icon">📊</span>
+    <span class="bottom-label">グラフ</span>
+  </button>
+  <button class="bottom-tab" data-tab="tableview" onclick="showTab('tableview',this)">
+    <span class="bottom-icon">📋</span>
+    <span class="bottom-label">一覧</span>
+  </button>
+  <button class="bottom-tab" data-tab="settings" onclick="showTab('settings',this)">
+    <span class="bottom-icon">⚙️</span>
+    <span class="bottom-label">設定</span>
+  </button>
 </nav>
 
 <div class="main">
@@ -322,11 +427,11 @@ function val(rowDef, colIdx) {
 function yen(n)      { return '¥' + Math.round(n || 0).toLocaleString('ja-JP'); }
 function shortYen(n) { return '¥' + (Math.round(n || 0) / 10000).toFixed(0) + '万'; }
 
-function showTab(id, btn) {
+function showTab(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab, .bottom-tab').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll(`[data-tab="${id}"]`).forEach(b => b.classList.add('active'));
 }
 
 // ============================================================
